@@ -1,5 +1,6 @@
 import { performLogin } from "./util";
 import styles from "./LoginForm.module.css";
+import {useState} from "react";
 
 // ================ LOGIN FORM ====================
 //
@@ -15,23 +16,47 @@ import styles from "./LoginForm.module.css";
 //  * Show an alert box (native Javascript alert) if login succeeds. Investigate the performLogin function to find out how to log in successfully.
 
 export default function LoginForm() {
-  return (
-    <div className={styles.wrapper}>
-      <div className={styles.row}>
-        <label htmlFor={"email"}>Email</label>
-        <input id={"email"} type={"email"} />
-      </div>
-      <div className={styles.row}>
-        <label htmlFor={"password"}>Password</label>
-        <input id={"password"} type={"password"} />
-      </div>
+    const initState = {email: "", password: ""};
+    let [state, setState] = useState(initState);
+    let [isDisabled, setIsDisabled] = useState(false);
+    let [hasError, setHasError] = useState(false);
 
-      {/* Place login error inside this div. Show the div ONLY if there are login errors. */}
-      <div className={styles.errorMessage} />
+    function updateState(localState){
+        setState(localState);
+        setIsDisabled(localState.email === "" || localState.password.length < 6);
+    }
 
-      <div className={styles.row}>
-        <button>Login</button>
-      </div>
-    </div>
-  );
+    function login(){
+        setIsDisabled(true)
+        performLogin(state)
+            .then(() => {
+                setHasError(false);
+                setIsDisabled(false);})
+            .catch(() => {
+                setHasError(true)});
+    }
+
+    return (
+        <div className={styles.wrapper}>
+            <div className={styles.row}>
+                <label htmlFor={"email"}>Email</label>
+                <input onChange={e => updateState({...state, email: e.target.value})} id={"email"} type={"email"} />
+            </div>
+            <div className={styles.row}>
+                <label htmlFor={"password"}>Password</label>
+                <input onChange={e => updateState({...state, password: e.target.value})} id={"password"} type={"password"} />
+            </div>
+
+            {/* Place login error inside this div. Show the div ONLY if there are login errors. */}
+            <div className={styles.errorMessage}>
+                {hasError ? "We got error" : ""}
+            </div>
+
+            <div className={styles.row}>
+                <button disabled={isDisabled} onClick={() => login()}>Login</button>
+            </div>
+
+
+        </div>
+    );
 }
